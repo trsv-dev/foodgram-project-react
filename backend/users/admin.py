@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from users.models import User
+from users.models import User, Follow
 
 
 @admin.register(User)
@@ -16,3 +16,12 @@ class UserAdmin(admin.ModelAdmin):
     ordering = ('id',)
     empty_value_display = '-Пусто-'
 
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    """Подписки."""
+
+    list_display = ('author', 'follower')
+    list_display_links = ('author', 'follower')
+    list_filter = ('author', 'follower')
+    ordering = ('author',)
