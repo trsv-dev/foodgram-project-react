@@ -63,14 +63,6 @@ class User(AbstractUser):
         help_text='Выберите роль'
     )
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = (
-        'username',
-        'first_name',
-        'last_name',
-        'password'
-    )
-
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -80,6 +72,10 @@ class User(AbstractUser):
                 name='unique_username_email',
             ),
         )
+        ordering = ('id',)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name', 'password')
 
     def __str__(self):
         return self.username

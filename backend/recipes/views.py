@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions
-from rest_framework.viewsets import ReadOnlyModelViewSet
+
 from recipes.models import Tags
 from recipes.serializers import TagsSerializer
 

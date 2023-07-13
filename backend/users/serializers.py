@@ -1,7 +1,7 @@
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 
 from users.models import User, Follow
 
@@ -13,7 +13,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         model = User
         fields = ('email', 'id', 'username',
                   'first_name', 'last_name', 'password')
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
         username = data.get('username')
@@ -62,7 +62,7 @@ class FollowSerializer(serializers.ModelSerializer):
                 queryset=Follow.objects.all(),
                 fields=('author', 'follower'),
                 message='Подписка на автора уже оформлена'
-            )
+            ),
         )
 
     def validate(self, data):
@@ -76,3 +76,18 @@ class FollowSerializer(serializers.ModelSerializer):
                 'Нельзя подписаться на самого себя'
             )
         return data
+
+
+class FollowingStatusSerializer(CustomUserSerializer):
+    """Сериализатор для вывода информации о подписках."""
+
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed'
+        )
+
+        # добавить 'recipes', 'recipes_count' и методы их получения
