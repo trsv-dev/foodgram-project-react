@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinLengthValidator
 from django.db import models
 
 
@@ -18,7 +18,7 @@ class User(AbstractUser):
         unique=True,
         blank=False,
         null=False,
-        verbose_name='Эл. почта',
+        verbose_name='email',
         help_text='Введите электронную почту'
     )
     username = models.CharField(
@@ -28,13 +28,17 @@ class User(AbstractUser):
                 message='В имени пользователя разрешены '
                         'только символы . @ + - _ и пробел'
             ),
+            MinLengthValidator(
+                limit_value=2,
+                message='Длина username должна быть более 2 символов'
+            ),
         ),
         max_length=150,
         unique=True,
         blank=False,
         null=False,
-        verbose_name='Пользователь',
-        help_text='Имя пользователя'
+        verbose_name='username',
+        help_text='Введите имя пользователя'
     )
     first_name = models.CharField(
         max_length=150,
@@ -59,9 +63,23 @@ class User(AbstractUser):
         help_text='Выберите роль'
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = (
+        'username',
+        'first_name',
+        'last_name',
+        'password'
+    )
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('username', 'email'),
+                name='unique_username_email',
+            ),
+        )
 
     def __str__(self):
         return self.username
@@ -69,3 +87,34 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return self.role == self.ADMIN
+
+
+class Follow(models.Model):
+    """Модель подписки на авторов."""
+
+    follower = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Подписчик',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='author',
+        verbose_name='Автор',
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('author', 'follower'),
+                name='unique_following'
+            ),
+        )
+        ordering = ('id',)
+
+    def __str__(self):
+        return f'Подписка {self.follower} на {self.author}'
