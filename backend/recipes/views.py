@@ -1,8 +1,10 @@
 from rest_framework import viewsets, permissions
 from django_filters.rest_framework import DjangoFilterBackend
 
-from recipes.models import Tags, Ingredients
-from recipes.serializers import TagsSerializer, IngredientsSerializer
+from recipes.models import Tags, Ingredients, Recipe
+from recipes.serializers import (
+    TagsSerializer, IngredientsSerializer, RecipesSerializer
+)
 from recipes.filters import IngrediensByNameSearchFilter
 
 
@@ -19,3 +21,9 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.AllowAny,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngrediensByNameSearchFilter
+
+
+class RecipesViewSet(viewsets.ModelViewSet):
+    """Вьюсет создания рецепта."""
+    queryset = Recipe.objects.all()
+    pass
