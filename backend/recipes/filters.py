@@ -1,4 +1,6 @@
+from django.db.models import Q, Case, When, Value, CharField
 from django_filters import rest_framework as filters
+
 from recipes.models import Ingredients
 
 
@@ -17,5 +19,14 @@ class IngrediensByNameSearchFilter(filters.FilterSet):
         а потом по произвольному месту.
         """
 
-        return queryset.filter(name__istartswith=value) | \
-               queryset.filter(name__icontains=value)
+        case_expression = Case(
+            When(name__istartswith=value, then=Value(1)),
+            default=Value(2),
+            output_field=CharField(),
+        )
+
+        sorted_queryset = queryset.annotate(
+            custom_sort=case_expression,
+        ).filter(Q(name__istartswith=value) | Q(name__icontains=value))
+
+        return sorted_queryset.order_by(case_expression)
