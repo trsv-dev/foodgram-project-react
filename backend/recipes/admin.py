@@ -10,11 +10,12 @@ from recipes.models import (
 class IngredientsAdmin(admin.ModelAdmin):
 
     list_display = (
-        'id', 'name', 'measurement_unit'
+        'pk', 'name', 'measurement_unit'
     )
     list_display_links = ('name', 'measurement_unit')
     search_fields = ('name', 'measurement_unit')
-    list_filter = ('name', 'measurement_unit')
+    list_filter = ('measurement_unit',)
+    list_per_page = 50
     ordering = ('id',)
     empty_value_display = '-Пусто-'
 
@@ -35,7 +36,7 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'recipe', 'ingredient')
     search_fields = ('recipe', 'ingredient')
-    list_filter = ('recipe', 'ingredient')
+    # list_filter = ('recipe', 'ingredient')
     ordering = ('id',)
     empty_value_display = '-Пусто-'
 

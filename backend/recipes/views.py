@@ -26,4 +26,5 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     """Вьюсет создания рецепта."""
     queryset = Recipe.objects.all()
-    pass
+    serializer_class = RecipesSerializer
+

@@ -8,7 +8,7 @@ class TagsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tags
-        fields = ('name', 'color', 'slug')
+        fields = ('id', 'name', 'color', 'slug')
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
@@ -24,4 +24,4 @@ class RecipesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', )
+        fields = ('name', )
