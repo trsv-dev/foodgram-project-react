@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django_admin_listfilter_dropdown.filters import DropdownFilter
 
 from recipes.models import (
     Ingredients, Tags, RecipeIngredient, Recipe, Favorites, ShoppingList
@@ -14,7 +15,10 @@ class IngredientsAdmin(admin.ModelAdmin):
     )
     list_display_links = ('name', 'measurement_unit')
     search_fields = ('name', 'measurement_unit')
-    list_filter = ('measurement_unit',)
+    list_filter = (
+        ('name', DropdownFilter),
+        ('measurement_unit', DropdownFilter),
+    )
     list_per_page = 50
     ordering = ('id',)
     empty_value_display = '-Пусто-'
@@ -36,7 +40,6 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'recipe', 'ingredient')
     search_fields = ('recipe', 'ingredient')
-    # list_filter = ('recipe', 'ingredient')
     ordering = ('id',)
     empty_value_display = '-Пусто-'
 
@@ -70,12 +73,18 @@ class RecipeAdmin(admin.ModelAdmin):
 
     show_ingredients.short_description = 'Используемые ингредиенты'
 
+    def show_favorite(self, object):
+        return object.favorites.all().count()
+
+    show_favorite.short_description = 'В избранном'
+
     list_display = (
         'id', 'name', 'author', 'show_tags', 'show_ingredients',
-        'text', 'cooking_time', 'pub_date', 'show_image',
+        'text', 'cooking_time', 'pub_date', 'show_image', 'show_favorite'
     )
     search_fields = ('author__username', 'name')
-    list_filter = ('author__username', 'name',)
+    list_filter = ('author__username', 'name', 'tags')
+
     ordering = ('id',)
     empty_value_display = '-Пусто-'
     inlines = (

@@ -69,6 +69,7 @@ class Recipe(models.Model):
         null=False,
         on_delete=models.CASCADE,
         verbose_name='Автор',
+        related_name='recipes',
         help_text='Укажите автора рецепта'
     )
     ingredients = models.ManyToManyField(
@@ -91,7 +92,7 @@ class Recipe(models.Model):
         upload_to='recipes/images/',
         verbose_name='Изображение',
         help_text='Загрузите изображение'
-        )
+    )
     name = models.TextField(
         max_length=200,
         blank=False,
@@ -100,7 +101,6 @@ class Recipe(models.Model):
         help_text='Укажите название рецепта'
     )
     text = models.TextField(
-        max_length=200,
         blank=False,
         null=False,
         verbose_name='Описание',
@@ -124,7 +124,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
-        verbose_name='Рецепт'
+        verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-pub_date',)
 
@@ -138,6 +138,7 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        related_name='recipes_ingredients',
         verbose_name='Рецепт',
         help_text='Укажите рецепт'
 
@@ -145,6 +146,7 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredients,
         on_delete=models.CASCADE,
+        related_name='recipes_ingredients',
         verbose_name='Ингредиент',
         help_text='Выберите ингредиент'
     )
@@ -171,7 +173,10 @@ class RecipeIngredient(models.Model):
         ordering = ('id',)
 
     def __str__(self):
-        return f'Ингредиенты для "{self.recipe}": {self.ingredient}'
+        return (
+            f'Ингредиенты для "{self.recipe}": {self.ingredient} - '
+            f'{self.amount}'
+        )
 
 
 class Favorites(models.Model):

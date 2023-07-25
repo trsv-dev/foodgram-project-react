@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator, MinLengthValidator
+from django.core.validators import RegexValidator
 from django.db import models
 
 
@@ -27,10 +27,6 @@ class User(AbstractUser):
                 regex=r'^[\w.@+-]+$',
                 message='В имени пользователя разрешены '
                         'только символы . @ + - _ и пробел'
-            ),
-            MinLengthValidator(
-                limit_value=2,
-                message='Длина username должна быть более 2 символов'
             ),
         ),
         max_length=150,

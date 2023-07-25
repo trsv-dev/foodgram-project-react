@@ -1,10 +1,14 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
 from users.models import User, Follow
 
+admin.site.site_title = 'Foodgram'
+admin.site.site_header = 'Проект "Foodgram"'
+
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(UserAdmin):
     """Приложение users."""
 
     list_display = (
