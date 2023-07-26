@@ -1,4 +1,4 @@
-from recipes.models import Ingredients, User
+from recipes.models import Ingredients, User, Tags
 
 
 def load_ingredients(data):
@@ -30,5 +30,17 @@ def load_users(data):
                 role=role
             )
             lst.append(user)
+
+    return lst
+
+
+def load_tags(data):
+    """Функция для загрузки тэгов."""
+
+    lst = []
+    for row in data:
+        name, color, slug = row
+        tags = Tags(name=name, color=color, slug=slug)
+        lst.append(tags)
 
     return lst

@@ -49,7 +49,7 @@ class RecipesFiltering(filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author', 'is_favorited')
+        fields = ('tags', 'is_favorited')
 
     def is_user_anonimous(self):
         """

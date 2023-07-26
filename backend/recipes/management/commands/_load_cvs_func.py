@@ -4,21 +4,23 @@ import time
 
 from foodgram.settings import BASE_DIR
 from recipes.management.commands.load_functions import (load_ingredients,
-                                                        load_users)
-from recipes.models import Ingredients
+                                                        load_users, load_tags)
+from recipes.models import Ingredients, Tags
 from users.models import User
 
 # Если потребуется добавить импорты, то можно
 # добавить сюда название модели и файл для импорта.
 CSV_DATA = {
     Ingredients: 'ingredients.csv',
-    User: 'users.csv'
+    User: 'users.csv',
+    Tags: 'tags.csv'
 }
 
 # А сюда прописать функцию обработки импорта.
 LOAD_FUNCTIONS = {
     Ingredients: load_ingredients,
-    User: load_users
+    User: load_users,
+    Tags: load_tags
 }
 
 
