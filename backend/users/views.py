@@ -64,7 +64,7 @@ class CustomUserViewSet(UserViewSet):
     @action(
         detail=False, methods=['GET'], url_path='me',
         permission_classes=(permissions.IsAuthenticated,)
-        )
+    )
     def get_me(self, request):
         """Получение информации о себе."""
 

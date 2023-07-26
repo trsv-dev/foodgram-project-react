@@ -61,8 +61,8 @@ class RecipesFiltering(filters.FilterSet):
         user = self.request.user
         if isinstance(user, AnonymousUser):
             raise ValidationError(
-                f'Вы не можете фильтровать избранное. '
-                f'Для такой фильтрации вы должны быть авторизованы.'
+                'Вы не можете фильтровать избранное. '
+                'Для такой фильтрации вы должны быть авторизованы.'
             )
         return user
 
