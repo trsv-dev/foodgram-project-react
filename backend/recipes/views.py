@@ -75,7 +75,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         detail=True, methods=['POST', 'DELETE'], url_path='shopping_cart',
         url_name='shopping_cart',
         permission_classes=(permissions.IsAuthenticated,)
-        )
+    )
     def get_shopping_cart(self, request, pk):
         """
         Позволяет текущему пользователю добавлять рецепты
