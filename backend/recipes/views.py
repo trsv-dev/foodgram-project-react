@@ -49,7 +49,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             url_name='favorite', permission_classes=(
                 permissions.IsAuthenticated,
         )
-            )
+    )
     def get_favorite(self, request, pk):
         """Позволяет текущему пользователю добавлять рецепты в избранное."""
 
@@ -78,7 +78,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         url_name='shopping_cart', permission_classes=(
                 permissions.IsAuthenticated,
         )
-            )
+    )
     def get_shopping_cart(self, request, pk):
         """
         Позволяет текущему пользователю добавлять рецепты

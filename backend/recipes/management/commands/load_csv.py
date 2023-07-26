@@ -28,7 +28,8 @@ class Command(BaseCommand):
                 'Неожиданная ошибка работы импорта load_csv,'
             )
 
-        self.stdout.write(self.style.SUCCESS(
-            'Все данные из csv-файлов загружены в базу данных'
+        self.stdout.write(
+            self.style.SUCCESS(
+                'Все данные из csv-файлов загружены в базу данных'
             )
         )
