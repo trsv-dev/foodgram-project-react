@@ -46,9 +46,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
     filterset_class = RecipesFiltering
 
     @action(detail=True, methods=['POST', 'DELETE'], url_path='favorite',
-            url_name='favorite', permission_classes=(
-                permissions.IsAuthenticated,
-                )
+            url_name='favorite',
+            permission_classes=(permissions.IsAuthenticated,)
             )
     def get_favorite(self, request, pk):
         """Позволяет текущему пользователю добавлять рецепты в избранное."""
@@ -73,11 +72,9 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
 
     @action(
-        detail=True,
-        methods=['POST', 'DELETE'], url_path='shopping_cart',
-        url_name='shopping_cart', permission_classes=(
-                permissions.IsAuthenticated,
-            )
+        detail=True, methods=['POST', 'DELETE'], url_path='shopping_cart',
+        url_name='shopping_cart',
+        permission_classes=(permissions.IsAuthenticated,)
         )
     def get_shopping_cart(self, request, pk):
         """
