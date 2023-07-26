@@ -9,7 +9,7 @@ from api.permissions import IsAdmin, IsAuthor
 from api.serializers import (
     TagsSerializer, IngredientsSerializer, RecipeIngredient,
     RecipesWriteSerializer, AddToFavoritesSerializer,
-    AddedRecipeSerializer, ShoppingListSerializer
+    AddedRecipeSerializer, ShoppingListSerializer, RecipesReadSerializer
 )
 from api.utils import create_shopping_cart
 from recipes.filters import IngrediensByNameSearchFilter, RecipesFiltering
@@ -49,7 +49,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             url_name='favorite', permission_classes=(
                 permissions.IsAuthenticated,
         )
-    )
+            )
     def get_favorite(self, request, pk):
         """Позволяет текущему пользователю добавлять рецепты в избранное."""
 
@@ -123,6 +123,13 @@ class RecipesViewSet(viewsets.ModelViewSet):
             'ingredient__name'
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'
-        ).annotate(amount=Sum('amount'))
+        ).annotate(total_amount=Sum('amount'))
 
         return create_shopping_cart(username, ingredients)
+
+    def get_serializer_class(self):
+        """Выбор сериализатора для чтения рецепта и редактирования."""
+
+        if self.request.method == 'GET':
+            return RecipesReadSerializer
+        return RecipesWriteSerializer
