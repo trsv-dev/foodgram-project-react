@@ -4,9 +4,8 @@ from rest_framework import status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from api.permissions import IsAnonymous, IsAuthenticated
 from api.serializers import (
-    CustomUserSerializer, FollowSerializer, FollowingStatusSerializer
+    UserSerializer, FollowSerializer, FollowingStatusSerializer
 )
 from users.models import User, Follow
 
@@ -15,8 +14,7 @@ class CustomUserViewSet(UserViewSet):
     """Вьюсет создания пользователя."""
 
     queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
-    permission_classes = ((IsAnonymous | IsAuthenticated),)
+    serializer_class = UserSerializer
 
     @action(
         detail=True, methods=['POST', 'DELETE'], url_path='subscribe',
@@ -68,7 +66,7 @@ class CustomUserViewSet(UserViewSet):
     def get_me(self, request):
         """Получение информации о себе."""
 
-        serializer = CustomUserSerializer(
+        serializer = UserSerializer(
             instance=request.user,
             context={'request': request}
         )

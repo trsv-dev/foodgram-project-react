@@ -1,7 +1,9 @@
 from collections import Counter
-
+from djoser.serializers import UserSerializer as DjoserUserSerializer
+from djoser.serializers import (
+    UserCreateSerializer as DjoserUserCreateSerializer
+)
 from django.db.transaction import atomic
-from djoser.serializers import UserSerializer, UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -13,7 +15,7 @@ from recipes.models import (
 from users.models import User, Follow
 
 
-class CustomUserCreateSerializer(UserCreateSerializer):
+class CustomUserCreateSerializer(DjoserUserCreateSerializer):
     """Кастомный сериализатор создания пользователя."""
 
     password = serializers.CharField(write_only=True)
@@ -22,30 +24,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         model = User
         fields = ('email', 'id', 'username',
                   'first_name', 'last_name', 'password')
-
-    @staticmethod
-    def validate_password(data):
-        """
-        Проверка пароля на длину в 10 символов,
-        наличие цифр и заглавных букв.
-        """
-
-        conditions = [
-            len(data) >= 10,
-            any(char.isdigit() for char in data),
-            any(char.isupper() for char in data),
-        ]
-
-        if not all(conditions):
-            error_messages = (
-                'Пароль должен содержать не менее 10 символов, '
-                'содержать хотя бы одну цифру и хотя бы одну '
-                'заглавную букву.'
-            )
-
-            raise ValidationError(error_messages)
-
-        return data
 
     def validate(self, data):
         """
@@ -68,7 +46,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         return data
 
 
-class CustomUserSerializer(UserSerializer):
+class UserSerializer(DjoserUserSerializer):
     """Сериализатор для работы с User."""
 
     is_subscribed = serializers.SerializerMethodField(read_only=True)
@@ -117,7 +95,7 @@ class FollowSerializer(serializers.ModelSerializer):
         return data
 
 
-class FollowingStatusSerializer(CustomUserSerializer):
+class FollowingStatusSerializer(UserSerializer):
     """Сериализатор для вывода информации о подписках."""
 
     recipes = serializers.SerializerMethodField()
@@ -134,7 +112,7 @@ class FollowingStatusSerializer(CustomUserSerializer):
     def get_recipes(object):
         """Получаем рецепты с уменьшенным набором полей."""
 
-        return AddedRecipeSerializer(object.recipes.all(), many=True).data
+        return ShortRecipeSerializer(object.recipes.all(), many=True).data
 
     @staticmethod
     def get_recipes_count(object):
@@ -203,7 +181,7 @@ class ShoppingListSerializer(serializers.ModelSerializer):
         )
 
 
-class AddIngredientSerializer(serializers.ModelSerializer):
+class IngredientCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для ингредиента в рецепте."""
 
     id = serializers.IntegerField()
@@ -214,7 +192,7 @@ class AddIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
 
-class AddedRecipeSerializer(serializers.ModelSerializer):
+class ShortRecipeSerializer(serializers.ModelSerializer):
     """Уменьшенный набор полей модели Recipe для подписок."""
 
     # image = Base64ImageField()
@@ -227,12 +205,19 @@ class AddedRecipeSerializer(serializers.ModelSerializer):
 class RecipesReadSerializer(serializers.ModelSerializer):
     """Сериализатор для просмотра рецептов."""
 
-    author = CustomUserSerializer(read_only=True)
-    ingredients = serializers.SerializerMethodField()
+    author = UserSerializer(read_only=True)
+    ingredients = IngredientsInRecipeSerializer(
+        many=True,
+        source='recipes_ingredients',
+    )
     tags = TagsSerializer(many=True, read_only=True)
     image = Base64ImageField()
-    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
-    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.BooleanField(
+        read_only=True, default=False
+    )
+    is_favorited = serializers.BooleanField(
+        read_only=True, default=False
+    )
     cooking_time = serializers.IntegerField()
 
     class Meta:
@@ -242,35 +227,12 @@ class RecipesReadSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
         )
 
-    @staticmethod
-    def get_ingredients(recipe):
-        """Получаем ингредиенты."""
-
-        ingredients = recipe.recipes_ingredients.filter(recipe=recipe)
-        return IngredientsInRecipeSerializer(ingredients, many=True).data
-
-    def get_is_favorited(self, recipe):
-        """Проверка на нахождение в избранном."""
-
-        user = self.context.get('request').user
-        if user.is_authenticated:
-            return user.favorites.filter(recipe=recipe).exists()
-        return False
-
-    def get_is_in_shopping_cart(self, recipe):
-        """Проверка на нахождение в списке покупок."""
-
-        user = self.context.get('request').user
-        if user.is_authenticated:
-            return user.shopping_list.filter(recipe=recipe).exists()
-        return False
-
 
 class RecipesWriteSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и обновления рецептов."""
 
-    author = CustomUserSerializer(read_only=True)
-    ingredients = AddIngredientSerializer(many=True)
+    author = UserSerializer(read_only=True)
+    ingredients = IngredientCreateSerializer(many=True)
     image = Base64ImageField()
 
     class Meta:
@@ -339,11 +301,19 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
     def add_ingredients(ingredients, recipe):
         """Добавление ингредиентов."""
 
-        for item in ingredients:
-            ingredient = Ingredients.objects.get(id=item['id'])
-            RecipeIngredient.objects.create(
-                ingredient=ingredient, recipe=recipe, amount=item['amount']
+        ingredient_ids = [item['id'] for item in ingredients]
+        db_ingredients = Ingredients.objects.in_bulk(ingredient_ids)
+
+        recipe_ingredients = [
+            RecipeIngredient(
+                ingredient=db_ingredients[item['id']],
+                recipe=recipe,
+                amount=item['amount']
             )
+            for item in ingredients
+        ]
+
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     @atomic
     def create(self, validated_data):

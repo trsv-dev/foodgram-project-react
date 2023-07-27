@@ -1,37 +1,10 @@
-from django.db.models import Q, Case, When, Value, CharField
 from django_filters import rest_framework as filters
 from django.contrib.auth.models import AnonymousUser
+from django_filters import rest_framework as filters
 from rest_framework.exceptions import ValidationError
 
-from recipes.models import Ingredients, Recipe
-
-
-class IngrediensByNameSearchFilter(filters.FilterSet):
-    """Фильтр поиска по названию ингредиента."""
-
-    name = filters.CharFilter(method='filter_by_name')
-
-    class Meta:
-        model = Ingredients
-        fields = ('name',)
-
-    def filter_by_name(self, queryset, name, value):
-        """
-        Фильтрация сначала по первому вхождению,
-        а потом по произвольному месту.
-        """
-
-        case_expression = Case(
-            When(name__istartswith=value, then=Value(1)),
-            default=Value(2),
-            output_field=CharField(),
-        )
-
-        sorted_queryset = queryset.annotate(
-            custom_sort=case_expression,
-        ).filter(Q(name__istartswith=value) | Q(name__icontains=value))
-
-        return sorted_queryset.order_by(case_expression)
+from recipes.models import Recipe
+from users.models import User
 
 
 class RecipesFiltering(filters.FilterSet):
@@ -47,9 +20,18 @@ class RecipesFiltering(filters.FilterSet):
         label='favorites',
     )
 
+    author = filters.ModelChoiceFilter(
+        queryset=User.objects.all()
+    )
+
+    is_in_shopping_cart = filters.BooleanFilter(
+        method='get_is_in_shopping_cart',
+        label='shopping_list'
+    )
+
     class Meta:
         model = Recipe
-        fields = ('tags', 'is_favorited')
+        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
 
     def is_user_anonimous(self):
         """
@@ -72,4 +54,11 @@ class RecipesFiltering(filters.FilterSet):
         user = self.is_user_anonimous()
         if value:
             return queryset.filter(favorites__user=user)
+        return queryset
+
+    def get_is_in_shopping_cart(self, queryset, name, value):
+        """Фильтр по списку покупок."""
+
+        if value:
+            return queryset.filter(shopping_list__user=self.request.user)
         return queryset

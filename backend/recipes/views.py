@@ -1,7 +1,8 @@
-from django.db.models import Sum
+from django.db.models import Sum, Exists, OuterRef
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -9,10 +10,10 @@ from api.permissions import IsAdmin, IsAuthor
 from api.serializers import (
     TagsSerializer, IngredientsSerializer, RecipeIngredient,
     RecipesWriteSerializer, AddToFavoritesSerializer,
-    AddedRecipeSerializer, ShoppingListSerializer, RecipesReadSerializer
+    ShortRecipeSerializer, ShoppingListSerializer, RecipesReadSerializer
 )
 from api.utils import create_shopping_cart
-from recipes.filters import IngrediensByNameSearchFilter, RecipesFiltering
+from recipes.filters import RecipesFiltering
 from recipes.models import Tags, Ingredients, Recipe, Favorites, ShoppingList
 
 
@@ -23,8 +24,8 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientsSerializer
     pagination_class = None
     permission_classes = (permissions.AllowAny,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = IngrediensByNameSearchFilter
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -39,11 +40,30 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     """Вьюсет для создания объектов класса Recipe."""
 
-    queryset = Recipe.objects.select_related('author')
     serializer_class = RecipesWriteSerializer
     permission_classes = ((IsAuthor | IsAdmin),)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFiltering
+
+    def get_queryset(self):
+        """
+        Получение оптимизированного queryset
+        с аннотациями и подзапросами.
+        """
+
+        if self.request.user.is_authenticated:
+            queryset = Recipe.objects.annotate(
+                is_favorited=Exists(Favorites.objects.filter(
+                    user=self.request.user,
+                    recipe_id=OuterRef('pk'),
+                )),
+                is_in_shopping_cart=Exists(ShoppingList.objects.filter(
+                    user=self.request.user,
+                    recipe_id=OuterRef('pk'),
+                ))
+            ).select_related('author')
+
+            return queryset
 
     @action(detail=True, methods=['POST', 'DELETE'], url_path='favorite',
             url_name='favorite',
@@ -66,7 +86,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        favorite_serializer = AddedRecipeSerializer(recipe)
+        favorite_serializer = ShortRecipeSerializer(recipe)
         return Response(
             favorite_serializer.data, status=status.HTTP_201_CREATED
         )
@@ -96,7 +116,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        shopping_cart_serializer = AddedRecipeSerializer(recipe)
+        shopping_cart_serializer = ShortRecipeSerializer(recipe)
         return Response(
             shopping_cart_serializer.data, status=status.HTTP_201_CREATED
         )
@@ -122,7 +142,15 @@ class RecipesViewSet(viewsets.ModelViewSet):
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(total_amount=Sum('amount'))
 
-        return create_shopping_cart(username, ingredients)
+        file_to_download = create_shopping_cart(username, ingredients)
+
+        response = HttpResponse(
+            file_to_download, content_type='application/pdf'
+        )
+        response['Content-Disposition'] = \
+            f'attachment; filename="{username}_download_list.pdf"'
+
+        return response
 
     def get_serializer_class(self):
         """Выбор сериализатора для чтения рецепта и редактирования."""

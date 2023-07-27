@@ -9,6 +9,8 @@ from foodgram.settings import TEMPLATES_DIR
 
 
 def create_shopping_cart(username, ingredients):
+    """Создание pdf-файла со списком покупок для загрузки."""
+
     template_path = f'{TEMPLATES_DIR}/shopping_cart_template.html'
     template = get_template(template_path)
 
@@ -22,9 +24,4 @@ def create_shopping_cart(username, ingredients):
     pdf_file = BytesIO()
     HTML(string=html_string).write_pdf(pdf_file)
 
-    response = HttpResponse(
-        pdf_file.getvalue(), content_type='application/pdf'
-    )
-    response['Content-Disposition'] = \
-        f'attachment; filename="{username}_download_list.pdf"'
-    return response
+    return pdf_file.getvalue()
