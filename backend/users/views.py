@@ -17,20 +17,14 @@ class CustomUserViewSet(UserViewSet):
     serializer_class = UserSerializer
 
     @action(
-        detail=True, methods=['POST', 'DELETE'], url_path='subscribe',
+        detail=True, methods=['POST'], url_path='subscribe',
         permission_classes=(permissions.IsAuthenticated,)
     )
     def get_subscribe(self, request, id=None):
-        """Возможность подписываться и отписываться от автора."""
+        """Подписка на автора."""
 
         follower = request.user
         author = get_object_or_404(User, id=id)
-
-        if request.method == 'DELETE':
-            get_object_or_404(
-                Follow, follower=request.user, author=author
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
         follow_serializer = FollowSerializer(
             data={'follower': follower.id, 'author': author.id}
@@ -43,6 +37,22 @@ class CustomUserViewSet(UserViewSet):
         return Response(
             author_serializer.data, status=status.HTTP_201_CREATED
         )
+
+    @get_subscribe.mapping.delete
+    def delete_subscribe(self, request, id=None):
+        """Отписка от автора."""
+
+        follower = request.user
+        author = get_object_or_404(User, id=id)
+
+        if request.method == 'DELETE':
+            del_count, _ = Follow.objects.filter(
+                follower=follower, author=author
+            ).delete()
+
+            if del_count:
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(
         detail=False, methods=['GET'], url_path='subscriptions',

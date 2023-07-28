@@ -37,7 +37,43 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.AllowAny,)
 
 
-class RecipesViewSet(viewsets.ModelViewSet):
+class BaseRecipeView:
+    """
+    Базовый класс рецептов для наследования RecipesViewSet с общей логикой
+    добавления / удаления избранного и элементов корзины.
+    """
+
+    @staticmethod
+    def add_or_remove_to_favorites_or_cart(
+            request, pk, model_class, serializer_class
+    ):
+        """
+        Общий метод для добавления / удаления в
+        избранное или в корзину покупок.
+        """
+
+        recipe = get_object_or_404(Recipe, pk=pk)
+
+        if request.method == 'DELETE':
+            del_count, _ = model_class.objects.filter(
+                user=request.user, recipe=recipe
+            ).delete()
+            if del_count:
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = serializer_class(
+            data={'user': request.user.id, 'recipe': recipe.id}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        action_serializer = ShortRecipeSerializer(recipe)
+        return Response(
+            action_serializer.data, status=status.HTTP_201_CREATED
+        )
+
+
+class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
     """Вьюсет для создания объектов класса Recipe."""
 
     serializer_class = RecipesWriteSerializer
@@ -65,34 +101,27 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
             return queryset
 
-    @action(detail=True, methods=['POST', 'DELETE'], url_path='favorite',
-            url_name='favorite',
-            permission_classes=(permissions.IsAuthenticated,)
-            )
+    @action(
+        detail=True, methods=['POST'], url_path='favorite',
+        url_name='favorite', permission_classes=(permissions.IsAuthenticated,)
+    )
     def get_favorite(self, request, pk):
-        """Позволяет текущему пользователю добавлять рецепты в избранное."""
+        """Добавление рецепта в избранное."""
 
-        recipe = get_object_or_404(Recipe, pk=pk)
-
-        if request.method == 'DELETE':
-            favorite_recipe = get_object_or_404(
-                Favorites, user=request.user, recipe=recipe
+        return self.add_or_remove_to_favorites_or_cart(
+                request, pk, Favorites, AddToFavoritesSerializer
             )
-            favorite_recipe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        serializer = AddToFavoritesSerializer(
-            data={'user': request.user.id, 'recipe': recipe.id}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        favorite_serializer = ShortRecipeSerializer(recipe)
-        return Response(
-            favorite_serializer.data, status=status.HTTP_201_CREATED
-        )
+    @get_favorite.mapping.delete
+    def delete_favorite(self, request, pk):
+        """Удаление рецепта из избранного."""
+
+        return self.add_or_remove_to_favorites_or_cart(
+                request, pk, Favorites, AddToFavoritesSerializer
+            )
 
     @action(
-        detail=True, methods=['POST', 'DELETE'], url_path='shopping_cart',
+        detail=True, methods=['POST'], url_path='shopping_cart',
         url_name='shopping_cart',
         permission_classes=(permissions.IsAuthenticated,)
     )
@@ -102,23 +131,16 @@ class RecipesViewSet(viewsets.ModelViewSet):
         в список покупок.
         """
 
-        recipe = get_object_or_404(Recipe, pk=pk)
-
-        if request.method == 'DELETE':
-            shopping_cart_recipe = get_object_or_404(
-                ShoppingList, user=request.user, recipe=recipe
-            )
-            shopping_cart_recipe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        serializer = ShoppingListSerializer(
-            data={'user': request.user.id, 'recipe': recipe.id}
+        return self.add_or_remove_to_favorites_or_cart(
+            request, pk, ShoppingList, ShoppingListSerializer
         )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        shopping_cart_serializer = ShortRecipeSerializer(recipe)
-        return Response(
-            shopping_cart_serializer.data, status=status.HTTP_201_CREATED
+
+    @get_shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk):
+        """Удаление рецепта из списка покупок."""
+
+        return self.add_or_remove_to_favorites_or_cart(
+            request, pk, ShoppingList, ShoppingListSerializer
         )
 
     @action(

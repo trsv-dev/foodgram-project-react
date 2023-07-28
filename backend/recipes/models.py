@@ -122,6 +122,20 @@ class Recipe(models.Model):
         auto_now_add=True,
         verbose_name='Время публикации'
     )
+    favorited_by = models.ManyToManyField(
+        User,
+        through='Favorites',
+        related_name='favorite_recipes',
+        verbose_name='Избранные рецепты',
+        help_text='Рецепты, добавленные в избранное'
+    )
+    shopping_list_entries = models.ManyToManyField(
+        User,
+        through='ShoppingList',
+        related_name='shopping_list_recipes',
+        verbose_name='Список покупок',
+        help_text='Рецепты, добавленные в список покупок'
+    )
 
     class Meta:
         verbose_name = 'Рецепт'
