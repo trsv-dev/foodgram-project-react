@@ -3,8 +3,9 @@ import sys
 import time
 
 from foodgram.settings import BASE_DIR
-from recipes.management.commands.load_functions import (load_ingredients,
-                                                        load_users, load_tags)
+from recipes.management.commands.load_functions import (
+    load_ingredients, load_users, load_tags
+)
 from recipes.models import Ingredients, Tags
 from users.models import User
 
