@@ -189,7 +189,7 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
 
         return self.add_or_remove_to_favorites_or_cart(
                 request, pk, Favorites, AddToFavoritesSerializer
-            )
+        )
 
     @get_favorite.mapping.delete
     def delete_favorite(self, request, pk):
@@ -197,7 +197,7 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
 
         return self.add_or_remove_to_favorites_or_cart(
                 request, pk, Favorites, AddToFavoritesSerializer
-            )
+        )
 
     @action(
         detail=True, methods=['POST'], url_path='shopping_cart',
