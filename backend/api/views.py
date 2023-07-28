@@ -188,7 +188,7 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
         """Добавление рецепта в избранное."""
 
         return self.add_or_remove_to_favorites_or_cart(
-                request, pk, Favorites, AddToFavoritesSerializer
+            request, pk, Favorites, AddToFavoritesSerializer
         )
 
     @get_favorite.mapping.delete
@@ -196,7 +196,7 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
         """Удаление рецепта из избранного."""
 
         return self.add_or_remove_to_favorites_or_cart(
-                request, pk, Favorites, AddToFavoritesSerializer
+            request, pk, Favorites, AddToFavoritesSerializer
         )
 
     @action(
