@@ -1,4 +1,5 @@
 from collections import Counter
+
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from djoser.serializers import (
     UserCreateSerializer as DjoserUserCreateSerializer
@@ -15,7 +16,7 @@ from recipes.models import (
 from users.models import User, Follow
 
 
-class CustomUserCreateSerializer(DjoserUserCreateSerializer):
+class UserCreateSerializer(DjoserUserCreateSerializer):
     """Кастомный сериализатор создания пользователя."""
 
     password = serializers.CharField(write_only=True)
@@ -95,7 +96,7 @@ class FollowSerializer(serializers.ModelSerializer):
         return data
 
 
-class FollowingStatusSerializer(UserSerializer):
+class FollowingSerializer(UserSerializer):
     """Сериализатор для вывода информации о подписках."""
 
     recipes = serializers.SerializerMethodField()
@@ -195,8 +196,6 @@ class IngredientCreateSerializer(serializers.ModelSerializer):
 class ShortRecipeSerializer(serializers.ModelSerializer):
     """Уменьшенный набор полей модели Recipe для подписок."""
 
-    # image = Base64ImageField()
-
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
@@ -251,12 +250,14 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
         if any(count > 1 for count in ingredient_counter.values()):
             raise ValidationError(
-                'Ингредиенты не должны повторяться')
+                'Ингредиенты не должны повторяться'
+            )
 
         if any(int(ingredient.get('amount')) < 1 for ingredient in
                ingredients):
             raise ValidationError(
-                'Количество ингредиента не может быть меньше 1')
+                'Количество ингредиента не может быть меньше 1'
+            )
 
         return ingredients
 
@@ -300,6 +301,8 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
     @staticmethod
     def add_ingredients(ingredients, recipe):
         """Добавление ингредиентов."""
+
+        recipe.ingredients.clear()
 
         ingredient_ids = [item['id'] for item in ingredients]
         db_ingredients = Ingredients.objects.in_bulk(ingredient_ids)
@@ -347,7 +350,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         instance.tags.set(tags_data)
 
         ingredients_data = validated_data.get('ingredients')
-        RecipeIngredient.objects.filter(recipe=instance).delete()
         self.add_ingredients(ingredients_data, instance)
 
         instance.save()

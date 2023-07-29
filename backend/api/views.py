@@ -1,4 +1,4 @@
-from django.db.models import Sum, Exists, OuterRef
+from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,14 +9,14 @@ from rest_framework.response import Response
 
 from api.permissions import IsAdmin, IsAuthor
 from api.serializers import (
-    TagsSerializer, IngredientsSerializer, RecipeIngredient,
-    RecipesWriteSerializer, AddToFavoritesSerializer,
+    TagsSerializer, IngredientsSerializer, RecipesWriteSerializer,
+    AddToFavoritesSerializer,
     ShortRecipeSerializer, ShoppingListSerializer, RecipesReadSerializer
 )
 from api.serializers import (
-    UserSerializer, FollowSerializer, FollowingStatusSerializer
+    UserSerializer, FollowSerializer, FollowingSerializer
 )
-from api.utils import create_shopping_cart
+from api.utils import create_shopping_cart, get_shopping_cart_ingredients
 from recipes.filters import RecipesFiltering
 from recipes.models import Tags, Ingredients, Recipe, Favorites, ShoppingList
 from users.models import User, Follow
@@ -43,7 +43,7 @@ class CustomUserViewSet(UserViewSet):
         )
         follow_serializer.is_valid(raise_exception=True)
         follow_serializer.save()
-        author_serializer = FollowingStatusSerializer(
+        author_serializer = FollowingSerializer(
             author, context={'request': request}
         )
         return Response(
@@ -76,7 +76,7 @@ class CustomUserViewSet(UserViewSet):
         user = request.user
         queryset = User.objects.filter(author__follower=user)
         pages = self.paginate_queryset(queryset)
-        serializer = FollowingStatusSerializer(
+        serializer = FollowingSerializer(
             pages, context={'request': request}, many=True
         )
         return self.get_paginated_response(serializer.data)
@@ -181,42 +181,26 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
             return queryset
 
     @action(
-        detail=True, methods=['POST'], url_path='favorite',
+        detail=True, methods=['POST', 'DELETE'], url_path='favorite',
         url_name='favorite', permission_classes=(permissions.IsAuthenticated,)
     )
-    def get_favorite(self, request, pk):
-        """Добавление рецепта в избранное."""
-
-        return self.add_or_remove_to_favorites_or_cart(
-            request, pk, Favorites, AddToFavoritesSerializer
-        )
-
-    @get_favorite.mapping.delete
-    def delete_favorite(self, request, pk):
-        """Удаление рецепта из избранного."""
+    def manage_favorite(self, request, pk):
+        """Добавление/удаление рецепта в избранное."""
 
         return self.add_or_remove_to_favorites_or_cart(
             request, pk, Favorites, AddToFavoritesSerializer
         )
 
     @action(
-        detail=True, methods=['POST'], url_path='shopping_cart',
+        detail=True, methods=['POST', 'DELETE'], url_path='shopping_cart',
         url_name='shopping_cart',
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def get_shopping_cart(self, request, pk):
+    def manage_shopping_cart(self, request, pk):
         """
-        Позволяет текущему пользователю добавлять рецепты
+        Позволяет текущему пользователю добавлять/удалять рецепты
         в список покупок.
         """
-
-        return self.add_or_remove_to_favorites_or_cart(
-            request, pk, ShoppingList, ShoppingListSerializer
-        )
-
-    @get_shopping_cart.mapping.delete
-    def delete_shopping_cart(self, request, pk):
-        """Удаление рецепта из списка покупок."""
 
         return self.add_or_remove_to_favorites_or_cart(
             request, pk, ShoppingList, ShoppingListSerializer
@@ -235,16 +219,8 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         username = request.user.username
-        ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_list__user=request.user
-        ).order_by(
-            'ingredient__name'
-        ).values(
-            'ingredient__name', 'ingredient__measurement_unit'
-        ).annotate(total_amount=Sum('amount'))
-
+        ingredients = get_shopping_cart_ingredients(request.user)
         file_to_download = create_shopping_cart(username, ingredients)
-
         response = HttpResponse(
             file_to_download, content_type='application/pdf'
         )
