@@ -1,5 +1,7 @@
+from io import BytesIO
+
 from django.db.models import Exists, OuterRef
-from django.http import HttpResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -116,9 +118,9 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.AllowAny,)
 
 
-class BaseRecipeView:
+class BaseRecipeMixin:
     """
-    Базовый класс рецептов для наследования RecipesViewSet с общей логикой
+    Базовый миксин рецептов для наследования RecipesViewSet с общей логикой
     добавления / удаления избранного и элементов корзины.
     """
 
@@ -152,7 +154,7 @@ class BaseRecipeView:
         )
 
 
-class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
+class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeMixin):
     """Вьюсет для создания объектов класса Recipe."""
 
     serializer_class = RecipesWriteSerializer
@@ -220,12 +222,12 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeView):
 
         username = request.user.username
         ingredients = get_shopping_cart_ingredients(request.user)
-        file_to_download = create_shopping_cart(username, ingredients)
-        response = HttpResponse(
-            file_to_download, content_type='application/pdf'
-        )
-        response['Content-Disposition'] = \
-            f'attachment; filename="{username}_download_list.pdf"'
+        pdf_file_data = create_shopping_cart(username, ingredients)
+        response = FileResponse(BytesIO(pdf_file_data),
+                                content_type='application/pdf')
+        response[
+            'Content-Disposition'
+        ] = f'attachment; filename="{username}_download_list.pdf"'
 
         return response
 

@@ -93,6 +93,9 @@ class FollowSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 'Нельзя подписаться на самого себя'
             )
+
+        data = super().validate(data)
+
         return data
 
 
