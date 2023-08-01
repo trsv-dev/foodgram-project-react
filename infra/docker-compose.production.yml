@@ -16,7 +16,7 @@ services:
 
   backend:
     container_name: foodgram_backend
-    build: ../backend/
+    image: ${DOCKERHUB_LOGIN}/foodgram_backend
     command: |
       bash -c 'python manage.py migrate &&
       python manage.py collectstatic --noinput &&
@@ -32,9 +32,7 @@ services:
 
   frontend:
     container_name: foodgram_frontend
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: ${DOCKERHUB_LOGIN}/foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
