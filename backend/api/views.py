@@ -8,6 +8,7 @@ from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from api.paginators import ShoppingCartPagination
 
 from api.permissions import IsAdmin, IsAuthor
 from api.serializers import (
@@ -161,6 +162,7 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeMixin):
     permission_classes = ((IsAuthor | IsAdmin),)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFiltering
+    pagination_class = ShoppingCartPagination
 
     def get_queryset(self):
         """
@@ -237,14 +239,3 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeMixin):
         if self.request.method == 'GET':
             return RecipesReadSerializer
         return RecipesWriteSerializer
-
-    def get_paginated_response(self, data):
-        """
-        Возвращает ответ с пагинацией для списков рецептов.
-        Если запрос для метода manage_shopping_cart, возвращает данные
-        без пагинации.
-        """
-
-        if self.action == 'manage_shopping_cart':
-            return Response(data)
-        return super().get_paginated_response(data)
