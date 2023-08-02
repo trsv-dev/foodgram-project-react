@@ -67,7 +67,7 @@ jobs:
           script: |
             cd foodgram
             sudo docker compose -f docker-compose.production.yml down
-            sudo docker system prune -f
+            sudo docker system prune -a -f
             sudo docker compose -f docker-compose.production.yml pull
             sudo docker compose -f docker-compose.production.yml up -d
 
