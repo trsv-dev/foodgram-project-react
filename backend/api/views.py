@@ -7,7 +7,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from api.paginators import LimitPagination
@@ -74,28 +73,16 @@ class CustomUserViewSet(UserViewSet):
         detail=False, methods=['GET'], url_path='subscriptions',
         permission_classes=(permissions.IsAuthenticated,)
     )
-    # def get_subscriptions(self, request):
-    #     """Возвращает авторов, на которых подписан пользователь."""
-    #
-    #     user = request.user
-    #     queryset = User.objects.filter(author__follower=user)
-    #     paginator = PageNumberPagination()
-    #     pages = self.paginate_queryset(queryset)
-    #     serializer = FollowingSerializer(
-    #         pages, context={'request': request}, many=True
-    #     )
-    #     return self.get_paginated_response(serializer.data)
     def get_subscriptions(self, request):
         """Возвращает авторов, на которых подписан пользователь."""
 
         user = request.user
         queryset = User.objects.filter(author__follower=user)
-        paginator = PageNumberPagination()
-        pages = paginator.paginate_queryset(queryset, request)
+        pages = self.paginate_queryset(queryset)
         serializer = FollowingSerializer(
             pages, context={'request': request}, many=True
         )
-        return paginator.get_paginated_response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=False, methods=['GET'], url_path='me',
