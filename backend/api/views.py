@@ -9,7 +9,7 @@ from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from api.paginators import LimitPagination
+from api.paginators import LimitPagination, FollowPagination
 from api.permissions import IsAdmin, IsAuthor
 from api.serializers import (
     TagsSerializer, IngredientsSerializer, RecipesWriteSerializer,
@@ -30,7 +30,7 @@ class CustomUserViewSet(UserViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    pagination_class = LimitPagination
+    pagination_class = FollowPagination
 
     @action(
         detail=True, methods=['POST'], url_path='subscribe',
