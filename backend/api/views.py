@@ -212,7 +212,6 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeMixin):
         detail=False, methods=['GET'], url_path='download_shopping_cart',
         url_name='download_shopping_cart',
         permission_classes=(permissions.IsAuthenticated,),
-        pagination_class=None
     )
     def download_shopping_cart(self, request):
         """Скачивание списка покупок, если он есть."""
@@ -238,3 +237,14 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeMixin):
         if self.request.method == 'GET':
             return RecipesReadSerializer
         return RecipesWriteSerializer
+
+    def get_paginated_response(self, data):
+        """
+        Возвращает ответ с пагинацией для списков рецептов.
+        Если запрос для метода manage_shopping_cart, возвращает данные
+        без пагинации.
+        """
+
+        if self.action == 'manage_shopping_cart':
+            return Response(data)
+        return super().get_paginated_response(data)
