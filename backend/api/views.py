@@ -84,9 +84,10 @@ class CustomUserViewSet(UserViewSet):
         #     pages, context={'request': request}, many=True
         # )
         # return self.get_paginated_response(serializer.data)
-        follows = request.user.follows.all()
-        ids = follows.values_list('author_id', flat=True)
-        queryset = User.objects.filter(id__in=ids)
+        # follows = request.user.follows.all()
+        # ids = follows.values_list('author_id', flat=True)
+        user = request.user
+        queryset = User.objects.filter(author__follower=user)
         recipes_limit = self.request.query_params.get('recipes_limit', 99999)
         page = self.paginate_queryset(queryset)
         if page is not None:
