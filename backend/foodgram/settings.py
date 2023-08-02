@@ -104,7 +104,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS':
-        'rest_framework.pagination.PageNumberPagination',
+        # 'rest_framework.pagination.PageNumberPagination',
+        'api.paginators.LimitPagination',
     'PAGE_SIZE': 6,
     'SEARCH_PARAM': 'name',
 }
