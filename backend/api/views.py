@@ -8,8 +8,8 @@ from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from api.paginators import ShoppingCartPagination
 
+from api.paginators import LimitPagination
 from api.permissions import IsAdmin, IsAuthor
 from api.serializers import (
     TagsSerializer, IngredientsSerializer, RecipesWriteSerializer,
@@ -30,6 +30,7 @@ class CustomUserViewSet(UserViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = LimitPagination
 
     @action(
         detail=True, methods=['POST'], url_path='subscribe',
@@ -162,7 +163,7 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeMixin):
     permission_classes = ((IsAuthor | IsAdmin),)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFiltering
-    pagination_class = ShoppingCartPagination
+    pagination_class = LimitPagination
 
     def get_queryset(self):
         """
