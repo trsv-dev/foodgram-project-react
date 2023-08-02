@@ -9,7 +9,7 @@ from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-# from api.paginators import LimitPagination
+from api.paginators import LimitPagination
 from api.permissions import IsAdmin, IsAuthor
 from api.serializers import (
     TagsSerializer, IngredientsSerializer, RecipesWriteSerializer,
@@ -78,11 +78,16 @@ class CustomUserViewSet(UserViewSet):
 
         user = request.user
         queryset = User.objects.filter(author__follower=user)
-        pages = self.paginate_queryset(queryset)
+        paginator = LimitPagination()
+        # pages = self.paginate_queryset(queryset)
+        pages = paginator.paginate_queryset(
+            queryset=queryset, request=request
+        )
         serializer = FollowingSerializer(
             pages, context={'request': request}, many=True
         )
-        return self.get_paginated_response(serializer.data)
+        # return self.get_paginated_response(serializer.data)
+        return paginator.get_paginated_response(serializer.data)
 
     @action(
         detail=False, methods=['GET'], url_path='me',
