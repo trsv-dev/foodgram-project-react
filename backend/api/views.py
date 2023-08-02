@@ -30,6 +30,7 @@ class CustomUserViewSet(UserViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = LimitPagination
 
     @action(
         detail=True, methods=['POST'], url_path='subscribe',
@@ -76,18 +77,16 @@ class CustomUserViewSet(UserViewSet):
     def get_subscriptions(self, request):
         """Возвращает авторов, на которых подписан пользователь."""
 
-        user = request.user
-        queryset = User.objects.filter(author__follower=user)
-        paginator = LimitPagination()
+        # user = request.user
+        # queryset = User.objects.filter(author__follower=user)
         # pages = self.paginate_queryset(queryset)
-        pages = paginator.paginate_queryset(
-            queryset=queryset, request=request
-        )
-        serializer = FollowingSerializer(
-            pages, context={'request': request}, many=True
-        )
+        # serializer = FollowingSerializer(
+        #     pages, context={'request': request}, many=True
+        # )
         # return self.get_paginated_response(serializer.data)
-        return paginator.get_paginated_response(serializer.data)
+        user = request.user
+        new_queryset = User.objects.filter(author__follower=user)
+        return new_queryset
 
     @action(
         detail=False, methods=['GET'], url_path='me',
@@ -167,7 +166,7 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeMixin):
     permission_classes = ((IsAuthor | IsAdmin),)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFiltering
-    # pagination_class = LimitPagination
+    pagination_class = LimitPagination
 
     def get_queryset(self):
         """
