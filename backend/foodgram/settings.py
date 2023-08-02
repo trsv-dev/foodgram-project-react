@@ -105,7 +105,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS':
         # 'rest_framework.pagination.PageNumberPagination',
-        'api.paginators.LimitPagination',
+        'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 6,
     'SEARCH_PARAM': 'name',
 }
