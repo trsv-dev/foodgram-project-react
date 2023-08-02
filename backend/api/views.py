@@ -74,20 +74,28 @@ class CustomUserViewSet(UserViewSet):
         detail=False, methods=['GET'], url_path='subscriptions',
         permission_classes=(permissions.IsAuthenticated,)
     )
+    # def get_subscriptions(self, request):
+    #     """Возвращает авторов, на которых подписан пользователь."""
+    #
+    #     user = request.user
+    #     queryset = User.objects.filter(author__follower=user)
+    #     paginator = PageNumberPagination()
+    #     pages = self.paginate_queryset(queryset)
+    #     serializer = FollowingSerializer(
+    #         pages, context={'request': request}, many=True
+    #     )
+    #     return self.get_paginated_response(serializer.data)
     def get_subscriptions(self, request):
         """Возвращает авторов, на которых подписан пользователь."""
 
-        # user = request.user
-        queryset = User.objects.filter(author__follower=request.user)
+        user = request.user
+        queryset = User.objects.filter(author__follower=user)
         paginator = PageNumberPagination()
-        # pages = self.paginate_queryset(queryset)
-        pages = paginator.paginate_queryset(
-            queryset=queryset, request=request
-        )
+        pages = paginator.paginate_queryset(queryset, request)
         serializer = FollowingSerializer(
             pages, context={'request': request}, many=True
         )
-        return self.get_paginated_response(serializer.data)
+        return paginator.get_paginated_response(serializer.data)
 
     @action(
         detail=False, methods=['GET'], url_path='me',
