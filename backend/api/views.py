@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Count
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -77,11 +77,21 @@ class CustomUserViewSet(UserViewSet):
     def get_subscriptions(self, request):
         """Возвращает авторов, на которых подписан пользователь."""
 
-        user = request.user
-        queryset = User.objects.filter(author__follower=user)
-        pages = self.paginate_queryset(queryset)
+        # МОЕ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        # user = request.user
+        # queryset = User.objects.filter(author__follower=user)
+        # pages = self.paginate_queryset(queryset)
+        # serializer = FollowingSerializer(
+        #     pages, context={'request': request}, many=True
+        # )
+        # return self.get_paginated_response(serializer.data)
+        subscriptions = User.objects.filter(
+            subscribing__user=request.user
+        ).annotate(recipes_count=Count('recipes'))
+        page = self.paginate_queryset(subscriptions)
         serializer = FollowingSerializer(
-            pages, context={'request': request}, many=True
+            page, many=True, context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
 
