@@ -211,7 +211,8 @@ class RecipesViewSet(viewsets.ModelViewSet, BaseRecipeMixin):
     @action(
         detail=False, methods=['GET'], url_path='download_shopping_cart',
         url_name='download_shopping_cart',
-        permission_classes=(permissions.IsAuthenticated,)
+        permission_classes=(permissions.IsAuthenticated,),
+        pagination_class=None
     )
     def download_shopping_cart(self, request):
         """Скачивание списка покупок, если он есть."""
