@@ -17,6 +17,7 @@ services:
   backend:
     container_name: foodgram_backend
     image: ${DOCKERHUB_LOGIN}/foodgram_backend
+    restart: always
     command: |
       bash -c 'python manage.py migrate &&
       python manage.py collectstatic --noinput &&
