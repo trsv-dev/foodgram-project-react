@@ -84,9 +84,13 @@ class CustomUserViewSet(UserViewSet):
         #     pages, context={'request': request}, many=True
         # )
         # return self.get_paginated_response(serializer.data)
-        user = request.user
-        new_queryset = User.objects.filter(author__follower=user)
-        return new_queryset
+        user = self.request.user
+        authors = user.subscribe.all()
+        pages = self.paginate_queryset(authors)
+        serializer = FollowingSerializer(
+            pages, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=False, methods=['GET'], url_path='me',
