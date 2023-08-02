@@ -77,18 +77,26 @@ class CustomUserViewSet(UserViewSet):
     def get_subscriptions(self, request):
         """Возвращает авторов, на которых подписан пользователь."""
 
-        user = request.user
-        queryset = User.objects.filter(author__follower=user)
-        pages = self.paginate_queryset(queryset)
-
+        # user = request.user
+        # queryset = User.objects.filter(author__follower=user)
+        # pages = self.paginate_queryset(queryset)
+        # serializer = FollowingSerializer(
+        #     pages, context={'request': request}, many=True
+        # )
+        # return self.get_paginated_response(serializer.data)
+        follows = request.user.follows.all()
+        ids = follows.values_list('author_id', flat=True)
+        queryset = User.objects.filter(id__in=ids)
         recipes_limit = self.request.query_params.get('recipes_limit', 99999)
-
-        serializer = FollowingSerializer(
-            pages, context={
-                'request': request, 'recipes_limit': recipes_limit
-            }, many=True
-        )
-        return self.get_paginated_response(serializer.data)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = FollowingSerializer(
+                page, many=True, context={
+                    'recipes_limit': recipes_limit,
+                    'request': request
+                }
+            )
+            return self.get_paginated_response(serializer.data)
 
     @action(
         detail=False, methods=['GET'], url_path='me',
