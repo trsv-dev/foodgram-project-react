@@ -136,6 +136,8 @@ USE_L10N = True
 USE_TZ = True
 
 
+RECIPES_LIMIT = 3
+
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
@@ -146,5 +148,3 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
-
-RECIPES_LIMIT = 3

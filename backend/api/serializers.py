@@ -1,16 +1,16 @@
 from collections import Counter
 
-from djoser.serializers import UserSerializer as DjoserUserSerializer
+from django.db.transaction import atomic
 from djoser.serializers import (
     UserCreateSerializer as DjoserUserCreateSerializer
 )
-from django.db.transaction import atomic
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
-# from foodgram.settings import RECIPES_LIMIT
+from foodgram.settings import RECIPES_LIMIT
 from recipes.models import (
     Tags, Ingredients, Recipe, RecipeIngredient, Favorites, ShoppingList
 )
@@ -113,14 +113,12 @@ class FollowingSerializer(UserSerializer):
             'is_subscribed', 'recipes', 'recipes_count'
         )
 
-    # @staticmethod
-    def get_recipes(self, object):
+    @staticmethod
+    def get_recipes(object):
         """Получаем рецепты с уменьшенным набором полей."""
 
-        recipes_limit = self.context.get('recipes_limit')
-
         return ShortRecipeSerializer(
-            object.recipes.all()[:recipes_limit], many=True
+            object.recipes.all()[:RECIPES_LIMIT], many=True
         ).data
 
     @staticmethod
