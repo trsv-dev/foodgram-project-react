@@ -30,6 +30,7 @@ class CustomUserViewSet(UserViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = LimitPagination
 
     @action(
         detail=True, methods=['POST'], url_path='subscribe',
