@@ -113,12 +113,14 @@ class FollowingSerializer(UserSerializer):
             'is_subscribed', 'recipes', 'recipes_count'
         )
 
-    @staticmethod
-    def get_recipes(object):
+    # @staticmethod
+    def get_recipes(self, object):
         """Получаем рецепты с уменьшенным набором полей."""
 
+        recipes_count = self.context.get('recipes_count')
+
         return ShortRecipeSerializer(
-            object.recipes.all()[:RECIPES_LIMIT], many=True
+            object.recipes.all()[:recipes_count], many=True
         ).data
 
     @staticmethod
