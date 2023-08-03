@@ -84,6 +84,7 @@ class CustomUserViewSet(UserViewSet):
             pages, context={'request': request}, many=True
         )
         return self.get_paginated_response(serializer.data)
+
         ##########################################################
         # follows = request.user.follows.all()
         # ids = follows.values_list('author_id', flat=True)

@@ -10,6 +10,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
+from foodgram.settings import RECIPES_LIMIT
 from recipes.models import (
     Tags, Ingredients, Recipe, RecipeIngredient, Favorites, ShoppingList
 )
@@ -116,7 +117,9 @@ class FollowingSerializer(UserSerializer):
     def get_recipes(object):
         """Получаем рецепты с уменьшенным набором полей."""
 
-        return ShortRecipeSerializer(object.recipes.all(), many=True).data
+        return ShortRecipeSerializer(
+            object.recipes.all()[:RECIPES_LIMIT], many=True
+        ).data
 
     @staticmethod
     def get_recipes_count(object):
