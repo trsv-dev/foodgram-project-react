@@ -256,16 +256,16 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
         if any(count > 1 for count in ingredient_counter.values()):
             raise ValidationError(
-                {'ingredients': 'Ингредиенты не должны повторяться.'}
+                [{'ingredients': ['Ингредиенты не должны повторяться.']}]
             )
 
         if any(int(ingredient.get('amount')) < 1 for ingredient in
                ingredients):
             raise ValidationError(
-                {
+                [{
                     'ingredients':
-                        'Количество ингредиента не может быть меньше 1'
-                }
+                        ['Количество ингредиента не может быть меньше 1']
+                }]
             )
 
         return ingredients
@@ -302,10 +302,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
         if int(cooking_time) < 1:
             raise ValidationError(
-                {
-                    'cooking_time':
-                        'Время приготовления не может быть меньше 1 минуты'
-                }
+                'Время приготовления не может быть меньше 1 минуты'
             )
 
         return data
