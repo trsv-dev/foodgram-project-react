@@ -1,6 +1,6 @@
 ## **Сайт Foodgram, «Продуктовый помощник».**
 
-- Адрес - https://foodgram-project.ddns.net/
+- Адрес - https://foodgram-project.ddns.net/ (или http://158.160.64.235:7000/)
 - Логин (почта) - tarasov.itc@yandex.ru
 - Пароль - 1234509876t
 

@@ -256,13 +256,18 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
         if any(count > 1 for count in ingredient_counter.values()):
             raise ValidationError(
-                'Ингредиенты не должны повторяться'
+                # 'Ингредиенты не должны повторяться'
+                [{'ingredients': ['Ингредиенты не должны повторяться.']}]
             )
 
         if any(int(ingredient.get('amount')) < 1 for ingredient in
                ingredients):
             raise ValidationError(
-                'Количество ингредиента не может быть меньше 1'
+                # 'Количество ингредиента не может быть меньше 1'
+                [{
+                    'ingredients':
+                        ['Количество ингредиента не может быть меньше 1']
+                }]
             )
 
         return ingredients
